@@ -108,7 +108,7 @@ pipeline {
                     script {
                         // Apply Kubernetes manifests (e.g., deployment.yaml) Deployment.yml has both deployment and service yaml file
                         sh '''
-                        kubectl apply -f k8s/deployment.yaml
+                        kubectl apply -f k8s/manifest.yaml
 
                         # Ensure the rollout is complete
                         kubectl rollout status deployment/springboot-app
