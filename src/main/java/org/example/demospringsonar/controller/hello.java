@@ -15,6 +15,7 @@ public class hello {
 
     @GetMapping("/hello")
     public ResponseEntity sayHello(@RequestParam(value = "myName") String name) {
+        System.out.println(name);
         return ResponseEntity.ok().body("Hello " + name);
     }
 
