@@ -12,8 +12,12 @@ pipeline {
         SONAR_ORGANIZATION = 'shivere'             // SonarCloud organization key
         SONAR_PROJECT_KEY = 'demo-spring-sonar'               // SonarCloud project key
         SONAR_TOKEN = credentials('sonarcloud-token-id')                // SonarCloud token stored in Jenkins credentials
-        ROSA_KUBECONFIG = credentials('rosa-kubeconfig')                // OpenShift Kubeconfig file stored in Jenkins credentials
+//         ROSA_KUBECONFIG = credentials('rosa-kubeconfig')                // OpenShift Kubeconfig file stored in Jenkins credentials
         ECR_REPOSITORY = '648045682632.dkr.ecr.eu-north-1.amazonaws.com/demo-spring-sonar'
+        AWS_REGION = 'eu-north-1'
+        EKS_CLUSTER_NAME = 'demo-spring-sonar'
+        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')  // Store in Jenkins credentials
+        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')  // Store in Jenkins credentials
     }
 
     stages {
@@ -69,23 +73,49 @@ pipeline {
             }
         }
 
-        stage('Deploy to ROSA') {
-            steps {
-                script {
-                    withCredentials([file(credentialsId: 'ROSA_KUBECONFIG', variable: 'KUBECONFIG')]) {
+//         stage('Deploy to ROSA') {
+//             steps {
+//                 script {
+//                     withCredentials([file(credentialsId: 'ROSA_KUBECONFIG', variable: 'KUBECONFIG')]) {
+//                         sh '''
+//                         oc login --token=$(cat $KUBECONFIG) --server=https://api.your-rosa-cluster.region.rosa.amazonaws.com:6443
+//
+//                         # Update the deployment with the new image
+//                         oc set image deployment/springboot-app springboot-app=${ECR_REPOSITORY}:latest
+//
+//                         # Wait for the deployment to roll out
+//                         oc rollout status deployment/springboot-app
+//                         '''
+//                     }
+//                 }
+//             }
+//         }
+
+            stage('Configure AWS and EKS') {
+                steps {
+                    script {
+                        // Configure AWS CLI to interact with the EKS cluster
                         sh '''
-                        oc login --token=$(cat $KUBECONFIG) --server=https://api.your-rosa-cluster.region.rosa.amazonaws.com:6443
-
-                        # Update the deployment with the new image
-                        oc set image deployment/springboot-app springboot-app=${ECR_REPOSITORY}:latest
-
-                        # Wait for the deployment to roll out
-                        oc rollout status deployment/springboot-app
+                        aws eks update-kubeconfig --name ${EKS_CLUSTER_NAME} --region ${AWS_REGION}
                         '''
                     }
                 }
             }
-        }
+
+            stage('Deploy to EKS') {
+                steps {
+                    script {
+                        // Apply Kubernetes manifests (e.g., deployment.yaml and service.yaml)
+                        sh '''
+                        kubectl apply -f k8s/deployment.yaml
+                        kubectl apply -f k8s/service.yaml
+
+                        # Ensure the rollout is complete
+                        kubectl rollout status deployment/springboot-app
+                        '''
+                    }
+                }
+            }
     }
 
     post {
