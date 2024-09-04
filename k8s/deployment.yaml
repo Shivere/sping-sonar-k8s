@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: springboot-app
+  labels:
+    app: springboot-app
+spec:
+  replicas: 1  # Number of replicas (you can adjust this)
+  selector:
+    matchLabels:
+      app: springboot-app
+  template:
+    metadata:
+      labels:
+        app: springboot-app
+    spec:
+      containers:
+        - name: springboot-app
+          image: shivere/demo-spring-sonar:latest  # Replace this with your actual Docker image
+          ports:
+            - containerPort: 8080  # The port on which your Spring Boot app runs
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "prod"  # Set any Spring profile if necessary
+          resources:  # Optional: Define resource limits and requests
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health  # If you're using Spring Boot Actuator for health checks
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: springboot-app-service
+spec:
+  type: LoadBalancer  # Expose this service externally using a cloud provider's load balancer
+  ports:
+    - port: 80  # External port
+      targetPort: 8080  # Target container port
+      protocol: TCP
+  selector:
+    app: springboot-app
