@@ -27,30 +27,31 @@ pipeline {
             }
         }
 
+        stage('Build and Test') {
+            steps {
+                sh 'mvn clean package' // This ensures the classes are compiled
+            }
+            post {
+                success {
+                    junit '**/target/surefire-reports/*.xml' // Report test results
+                }
+            }
+        }
+
         stage('SonarCloud Analysis') {
             steps {
                 script {
-                    // Run SonarCloud analysis
+                    // Run SonarCloud analysis after build
                     withSonarQubeEnv('SonarCloud') {
                         sh """
                         mvn sonar:sonar \
                         -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
                         -Dsonar.organization=${SONAR_ORGANIZATION} \
                         -Dsonar.host.url=https://sonarcloud.io \
-                        -Dsonar.login=${SONAR_TOKEN}
+                        -Dsonar.login=${SONAR_TOKEN} \
+                        -Dsonar.java.binaries=target/classes
                         """
                     }
-                }
-            }
-        }
-
-        stage('Build and Test') {
-            steps {
-                sh 'mvn clean package'
-            }
-            post {
-                success {
-                    junit '**/target/surefire-reports/*.xml'
                 }
             }
         }
