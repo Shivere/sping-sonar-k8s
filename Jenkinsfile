@@ -23,7 +23,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/Shivere/demo-spring-sonar.git'
+                checkout scm // Automatically checks out the repo and branch
             }
         }
 
