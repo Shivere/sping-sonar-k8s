@@ -82,10 +82,10 @@ pipeline {
 //                         oc login --token=$(cat $KUBECONFIG) --server=https://api.your-rosa-cluster.region.rosa.amazonaws.com:6443
 //
 //                         # Update the deployment with the new image
-//                         oc set image deployment/springboot-app springboot-app=${ECR_REPOSITORY}:latest
+//                         oc set image deployment/demo-spring-sonar-app demo-spring-sonar-app=${ECR_REPOSITORY}:latest
 //
 //                         # Wait for the deployment to roll out
-//                         oc rollout status deployment/springboot-app
+//                         oc rollout status deployment/demo-spring-sonar-app
 //                         '''
 //                     }
 //                 }
@@ -111,7 +111,7 @@ pipeline {
                         kubectl apply -f k8s/manifest.yaml
 
                         # Ensure the rollout is complete
-                        kubectl rollout status deployment/springboot-app
+                        kubectl rollout status deployment/demo-spring-sonar-app
                         '''
                     }
                 }
